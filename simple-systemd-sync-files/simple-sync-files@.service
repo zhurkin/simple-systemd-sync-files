@@ -1,0 +1,17 @@
+[Unit]
+Description=Simple Systemd Sync Files %I
+Before=umount.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/default/simple-sync-files.d/%i
+ExecStartPre=/usr/bin/chown -Rf ${SSSF_CHOWN_USER} ${SSSF_SECOND_DIRECTORY}
+ExecStart=/usr/bin/sh -c 'echo -n Simple Systemd Sync Files %i Config'
+ExecStart=/usr/bin/sh -c '/usr/bin/rsync -arv ${SSSF_FIRST_DIRECTORY} ${SSSF_SECOND_DIRECTORY}'
+ExecStop=/usr/bin/sh -c '/usr/bin/rsync -ar ${SSSF_SECOND_DIRECTORY} ${SSSF_FIRST_DIRECTORY}'
+ExecStopPost=/usr/bin/chown -Rf ${SSSF_CHOWN_USER} ${SSSF_SECOND_DIRECTORY}
+
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
