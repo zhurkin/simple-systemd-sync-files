@@ -1,6 +1,13 @@
 [Unit]
 Description=Simple Systemd Sync Files %I
 Before=umount.target
+{% if simple_systemd_sync_service.additional_unit is defined %}
+{% for unit in simple_systemd_sync_service.additional_unit %}
+{% for key, value in unit.items() %}
+{{ key }}={{ value }}
+{% endfor %}
+{% endfor %}
+{% endif %}
 
 [Service]
 Type=oneshot

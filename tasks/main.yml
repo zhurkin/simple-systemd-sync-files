@@ -1,0 +1,49 @@
+---
+
+- name: Install rsync
+  package:
+    name: rsync
+    state: present
+
+- name: Create systemd service file
+  template:
+    src: '{{ role_path }}/templates/systemd_service/simple-sync-files@.service.j2'
+    dest: '/etc/systemd/system/simple-sync-files@.service'
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create Folder /etc/default/simple-sync-files.d
+  file:
+    path: /etc/default/simple-sync-files.d
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: Create config file
+  template:
+    src: '{{ role_path }}/templates/defaults/config.j2'
+    dest: '/etc/default/simple-sync-files.d/{{ item.name_config }}'
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ simple_systemd_sync_files }}"
+
+- name: Start service Simple-Systemd-Sync-Files
+  systemd:
+    name: "simple-sync-files@{{ item.name_config }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  when: item.started is defined and item.started
+  loop: '{{ simple_systemd_sync_files | flatten(1) }}'
+
+- name: Stop service Simple-Systemd-Sync-Files
+  systemd:
+    name: "simple-sync-files@{{ item.name_config }}"
+    state: stopped
+    enabled: yes
+    daemon_reload: yes
+  when: item.started is undefined or item.started | bool == False
+  loop: '{{ simple_systemd_sync_files | flatten(1) }}'
